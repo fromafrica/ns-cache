@@ -1,0 +1,11 @@
+name = "ns-cache"
+main = "src/main.ts"
+compatibility_date = "2023-09-18"
+
+[vars]
+ENVIRONMENT = "prod"
+TOKEN = "1234567890"
+
+[[kv_namespaces]]
+binding = "NSCACHE"
+id = "1ebb58a2f6cb41edb82a44905aad19a1"
