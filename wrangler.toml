@@ -4,7 +4,10 @@ compatibility_date = "2023-09-18"
 
 [vars]
 ENVIRONMENT = "prod"
-TOKEN = "1234567890"
+TOKEN = "zj5jyr4wqps4xfaiviy5!"
+DATABASE_HOST = "us-west.connect.psdb.cloud"
+DATABASE_NAME = "fawlmain"
+DATABASE_USERNAME = "zj5jyr4wqps4xfaiviy5"
 
 [[kv_namespaces]]
 binding = "NSCACHE"
