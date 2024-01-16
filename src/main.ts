@@ -2,7 +2,7 @@ import { Hono } from 'hono'
 import { bearerAuth } from 'hono/bearer-auth'
 import { KVNamespace } from '@cloudflare/workers-types'
 import { connect } from '@planetscale/database'
-//import { customAlphabet } from 'nanoid'
+import { customAlphabet } from 'nanoid'
 //import { signToken, hashPassword } from '@fromafrica/edge-api'
 
 type Bindings = {
@@ -98,14 +98,46 @@ app.post('/cache-create', async (c) => {
     const domain = reqBody.domain;
     const record = reqBody.record;
 
+	const config = {
+		host: c.env.DATABASE_HOST,
+		username: c.env.DATABASE_USERNAME,
+		password: c.env.DATABASE_PASSWORD,
+		fetch: (url: any, init: any) => {
+			delete init['cache']
+			return fetch(url, init)
+		}
+	}
+	
+	const conn = connect(config) // connect to mysql
+
+	const nanoid = customAlphabet('123456789ABCDEFGHIJKLMNPQRSTVWXYZabcdefghijklmnprstvwxyz', 12)
+	const id = nanoid()
+
+	// TODO: SANITIZE INPUT
+	let query = "INSERT into fawlmain.ns (id, domain, json) VALUES ('"+ id +"', '"+ domain +"', '"+ json +"');"
+
 	try {
-		await c.env.NSCACHE.put(domain, record)
+		const data = await conn.execute(query) // execute query
 
-		return c.json({ status: 200, message: 'record updated', domain: domain, record: record })
+		console.log(data)
 
-	} catch (e) {
-		console.log(e)
-		return c.json({ error: 'system error' })
+		try {
+			await c.env.NSCACHE.put(domain, record)
+	
+			return c.json({ status: 200, message: 'record updated', domain: domain, record: record })
+	
+		} catch (e) {
+			console.log(e);
+			return c.json({ error: 'system error' })
+		}
+
+		return c.json('{ "statusCode": "200" }')
+	
+	} catch (err) {
+		console.error(err)
+		c.status(200)
+		c.header('Content-Type', 'application/json')
+		return c.body('{ "error": "system error detected!" }')
 	}
 })
 
