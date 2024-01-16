@@ -114,7 +114,7 @@ app.post('/cache-create', async (c) => {
 	const id = nanoid()
 
 	// TODO: SANITIZE INPUT
-	let query = "INSERT into fawlmain.ns (id, domain, json) VALUES ('"+ id +"', '"+ domain +"', '"+ json +"');"
+	let query = "INSERT into fawlmain.ns (id, domain, json) VALUES ('"+ id +"', '"+ domain +"', '"+ record +"');"
 
 	try {
 		const data = await conn.execute(query) // execute query
