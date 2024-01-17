@@ -15,6 +15,17 @@ type Bindings = {
 	DATABASE_PASSWORD: string;
 }
 
+function isValidJson(jsonData: string): boolean {
+    try {
+        // Try parsing the JSON data
+        JSON.parse(jsonData);
+        return true;
+    } catch (error) {
+        // If an error is thrown, the JSON is malformed
+        return false;
+    }
+}
+
 const app = new Hono<{ Bindings: Bindings }>()
 
 app.use('*', async (c, next) => {
@@ -61,22 +72,53 @@ app.post('/cache-update', async (c) => {
 
     const reqBody = await c.req.json();
 
-    if (!reqBody || !reqBody.domain || !reqBody.record) {
+    if (!reqBody || !reqBody.domain) {
 		c.status(200)
 		c.header('Content-Type', 'application/json')
 		return c.body('{ "error": "error detected." }')
 	}
 
     const domain = reqBody.domain;
-    const record = reqBody.record;
+
+	const config = {
+		host: c.env.DATABASE_HOST,
+		username: c.env.DATABASE_USERNAME,
+		password: c.env.DATABASE_PASSWORD,
+		fetch: (url: any, init: any) => {
+			delete init['cache']
+			return fetch(url, init)
+		}
+	}
+	
+	const conn = connect(config) // connect to mysql
+
+	// TODO: SANITIZE INPUT
+	let query = "SELECT (json) FROM fawlmain.ns WHERE domain='"+ domain +"' LIMIT 1;"
 
 	try {
-		await c.env.NSCACHE.put(domain, record)
+		const data = await conn.execute(query) // execute query
+
+		if (data.rows.length === 0) {
+			console.log('db system error')
+			return c.json({ error: 'db system error' })
+		}
+
+		if (!('json' in data.rows[0])) {
+			console.log('db malformed data error')
+			return c.json({ error: 'db malformed data error' })
+		}
+
+		if (!isValidJson(JSON.stringify(data.rows[0].json))) {
+			console.log('db invalid data error')
+			return c.json({ error: 'db invalid data error' })
+		}
+
+		await c.env.NSCACHE.put(domain, JSON.stringify(data.rows[0].json))
 
 		console.log('domain: '+ domain)
-		console.log('record: '+ record)
+		console.log('record: '+ JSON.stringify(data.rows[0].json))
 
-		return c.json({ status: 200, message: 'record updated', domain: domain, record: record })
+		return c.json({ status: 200, message: 'record updated', domain: domain, record: JSON.stringify(data.rows[0].json) })
 
 	} catch (e) {
 		console.log(e)
