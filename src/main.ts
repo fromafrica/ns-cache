@@ -150,7 +150,7 @@ app.post('/cache-create', async (c) => {
 		}
 	}
 	
-	const conn = connect(config) // connect to mysql
+	const conn = connect(config) // connect
 
 	const nanoid = customAlphabet('123456789ABCDEFGHIJKLMNPQRSTVWXYZabcdefghijklmnprstvwxyz', 12)
 	const id = nanoid()
