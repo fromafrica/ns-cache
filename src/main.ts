@@ -118,7 +118,7 @@ app.post('/cache-update', async (c) => {
 		console.log('domain: '+ domain)
 		console.log('record: '+ JSON.stringify(data.rows[0].json))
 
-		return c.json({ status: 200, message: 'record updated', domain: domain, record: JSON.stringify(data.rows[0].json) })
+		return c.json({ status: 200, message: 'record updated', domain: domain })
 
 	} catch (e) {
 		console.log(e)
@@ -150,7 +150,7 @@ app.post('/cache-create', async (c) => {
 		}
 	}
 	
-	const conn = connect(config) // connect to mysql
+	const conn = connect(config) // connect
 
 	const nanoid = customAlphabet('123456789ABCDEFGHIJKLMNPQRSTVWXYZabcdefghijklmnprstvwxyz', 12)
 	const id = nanoid()
@@ -166,7 +166,7 @@ app.post('/cache-create', async (c) => {
 		try {
 			await c.env.NSCACHE.put(domain, record)
 	
-			return c.json({ status: 200, message: 'record updated', domain: domain, record: record })
+			return c.json({ status: 200, message: 'record created', domain: domain })
 	
 		} catch (e) {
 			console.log(e);
